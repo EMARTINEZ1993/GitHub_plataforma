@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aprende Git &amp; GitHub - Entorno Interactivo</title>
+<!-- Google Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&amp;family=Inter:wght@300;400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#f05032',
+              'orange-dark': '#d93b1d',
+              emerald: '#10b981',
+              'emerald-dark': '#059669',
+              blue: '#38bdf8'
+            },
+            surface: {
+              lowest: '#080b0f',
+              dim: '#0d1117',
+              base: '#11161f',
+              elevated: '#161c26',
+              card: '#1b222e',
+              border: '#252e3e',
+              'border-light': '#323d51'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+            mono: ['"Fira Code"', 'monospace'],
+            body: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    /* Custom Scrollbar for clean IDE look */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #252e3e;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38455c;
+    }
+    
+    .module-pane {
+      display: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .module-pane.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-surface-lowest text-slate-200 font-sans h-screen w-screen overflow-hidden flex flex-col antialiased selection:bg-brand-orange/30 selection:text-white">
+<!-- ================= TOPBAR ================= -->
+<header class="h-16 bg-surface-dim border-b border-surface-border flex-none flex items-center justify-between px-4 sm:px-6 z-30 select-none">
+<!-- Brand Info & Sidebar Expand Trigger -->
+<div class="flex items-center gap-3 sm:gap-4">
+<!-- Expand Sidebar Button (Visible only when sidebar is closed) -->
+<button aria-label="Mostrar menú lateral" class="hidden p-2 rounded-lg bg-surface-card hover:bg-surface-elevated text-slate-300 hover:text-white border border-surface-border transition-all flex items-center justify-center group" id="sidebarOpenBtn" onclick="toggleSidebar()" title="Mostrar menú de navegación">
+<span class="material-symbols-outlined text-[20px] text-brand-orange group-hover:scale-110 transition-transform">menu_open</span>
+</button>
+<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-orange to-red-600 flex items-center justify-center shadow-lg shadow-brand-orange/20 text-white shrink-0">
+<span class="material-symbols-outlined text-[22px]">commit</span>
+</div>
+<div>
+<div class="flex items-center gap-2.5">
+<span class="font-extrabold text-base tracking-tight text-white">Git &amp; GitHub</span>
+</div>
+</div>
+</div>
+<!-- Center Progress Indicator -->
+<div class="hidden lg:flex items-center gap-4 bg-surface-base px-4 py-1.5 rounded-full border border-surface-border">
+<div class="flex items-center gap-2 text-xs font-mono">
+<span class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse"></span>
+<span class="text-slate-400">Progreso:</span>
+<span class="text-white font-bold" id="topProgressBadge">Paso 01 de 15</span>
+</div>
+<div class="w-32 h-2 bg-surface-card rounded-full overflow-hidden border border-surface-border">
+<div class="h-full bg-gradient-to-r from-brand-orange to-brand-emerald rounded-full transition-all duration-300 w-[6.66%]" id="topProgressBar"></div>
+</div>
+<span class="text-[11px] font-mono text-brand-emerald font-semibold" id="topCompletedPct">7%</span>
+</div>
+<!-- Quick Action / Status -->
+<div class="flex items-center gap-3">
+
+<button class="px-3 py-1.5 rounded bg-surface-card hover:bg-surface-elevated text-slate-200 text-xs font-semibold border border-surface-border transition-colors flex items-center gap-1.5" onclick="jumpToModule(14)">
+<span class="material-symbols-outlined text-brand-emerald text-[16px]">fact_check</span>
+<span class="hidden sm:inline">Checklist</span>
+</button>
+<button class="px-3 py-1.5 rounded bg-brand-orange/10 hover:bg-brand-orange/20 text-brand-orange text-xs font-semibold border border-brand-orange/30 transition-colors flex items-center gap-1.5" onclick="jumpToModule(15)">
+<span class="material-symbols-outlined text-[16px]">help</span>
+<span class="hidden sm:inline">Errores Frecuentes</span> 
+</button>
+</div>
+</header>
+<!-- ================= MAIN BODY CONTAINER ================= -->
+<div class="flex-1 flex overflow-hidden">
+<!-- ================= SIDEBAR ================= -->
+<aside class="w-80 bg-surface-dim border-r border-surface-border flex flex-col flex-none select-none transition-all duration-300 ease-in-out" id="sidebarMenu">
+<!-- Stage header indicator with collapse toggle -->
+<div class="p-3.5 border-b border-surface-border bg-surface-base/60 flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="text-xs font-mono uppercase tracking-wider text-slate-400 font-medium truncate">Contenido del Curso</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="text-[11px] font-mono text-brand-emerald font-bold bg-brand-emerald/10 px-2 py-0.5 rounded border border-brand-emerald/20" id="sidebarStatsBadge">1/15 Hechos</span>
+<!-- Collapse Button -->
+<button aria-label="Colapsar menú lateral" class="p-1 rounded hover:bg-surface-card text-slate-400 hover:text-white transition-colors flex items-center justify-center ml-1" id="sidebarCollapseBtn" onclick="toggleSidebar()" title="Ocultar menú lateral">
+<span class="material-symbols-outlined text-[18px]">left_panel_close</span>
+</button>
+</div>
+</div>
+<!-- Navigation list of modules -->
+<nav class="flex-1 overflow-y-auto p-3 space-y-4" id="sidebarNav">
+<!-- ETAPA 1 -->
+<div>
+<div class="px-2 py-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>
+<span>Etapa 1: Fundamentos</span>
+</div>
+<div class="mt-1 space-y-0.5">
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium transition-all group active" id="side-item-1" onclick="jumpToModule(1)">
+<span class="status-icon material-symbols-outlined text-[16px] text-brand-orange">radio_button_checked</span>
+<span class="truncate">01. Portada &amp; Resumen</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-2" onclick="jumpToModule(2)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">02. Git vs GitHub</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-3" onclick="jumpToModule(3)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">03. Instalación &amp; CLI</span>
+</button>
+</div>
+</div>
+<!-- ETAPA 2 -->
+<div>
+<div class="px-2 py-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-blue"></span>
+<span>Etapa 2: Cuentas &amp; Setup</span>
+</div>
+<div class="mt-1 space-y-0.5">
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-4" onclick="jumpToModule(4)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">04. Verificar Cuentas Existentes (Equipo Compartido)</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-5" onclick="jumpToModule(5)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">05. Credenciales en Windows &amp; VS Code</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-6" onclick="jumpToModule(6)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">06. Nueva Configuración de Usuario</span>
+</button>
+</div>
+</div>
+<!-- ETAPA 3 -->
+<div>
+<div class="px-2 py-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+<span>Etapa 3: Proyecto &amp; Código</span>
+</div>
+<div class="mt-1 space-y-0.5">
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-7" onclick="jumpToModule(7)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">07. Repositorio Remoto</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-8" onclick="jumpToModule(8)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">08. Proyecto Local &amp; README</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-9" onclick="jumpToModule(9)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">09. Script Python calcularSalario</span>
+</button>
+</div>
+</div>
+<!-- ETAPA 4 -->
+<div>
+<div class="px-2 py-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span>Etapa 4: Flujo Git Local</span>
+</div>
+<div class="mt-1 space-y-0.5">
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-10" onclick="jumpToModule(10)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">10. git init &amp; status</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-11" onclick="jumpToModule(11)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">11. git add &amp; commit</span>
+</button>
+</div>
+</div>
+<!-- ETAPA 5 -->
+<div>
+<div class="px-2 py-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+<span>Etapa 5: Despliegue en GitHub</span>
+</div>
+<div class="mt-1 space-y-0.5">
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-12" onclick="jumpToModule(12)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">12. Conectar Remoto</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-13" onclick="jumpToModule(13)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">13. git push &amp; verificación</span>
+</button>
+</div>
+</div>
+<!-- ETAPA 6 -->
+<div>
+<div class="px-2 py-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+<span>Etapa 6: Entrega &amp; Soporte</span>
+</div>
+<div class="mt-1 space-y-0.5">
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-14" onclick="jumpToModule(14)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">14. Checklist de Entrega</span>
+</button>
+<button class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all group" id="side-item-15" onclick="jumpToModule(15)">
+<span class="status-icon material-symbols-outlined text-[16px] text-slate-600">radio_button_unchecked</span>
+<span class="truncate">15. Troubleshooting</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Sidebar footer quick guide -->
+<div class="p-3 border-t border-surface-border bg-surface-base/50">
+<button class="w-full py-2 px-3 rounded-lg bg-surface-card hover:bg-surface-elevated text-slate-300 text-xs font-medium flex items-center justify-between border border-surface-border transition-colors" onclick="jumpToModule(15)">
+<span class="flex items-center gap-2">
+<span class="material-symbols-outlined text-brand-orange text-[18px]">terminal</span>
+<span>Consola de Dudas</span>
+</span>
+<span class="material-symbols-outlined text-[16px] text-slate-500">arrow_forward</span>
+</button>
+</div>
+</aside>
+<!-- ================= MAIN CONTENT AREA ================= -->
+<main class="flex-1 flex flex-col overflow-hidden bg-surface-lowest transition-all duration-300">
+<!-- Module Sub-header / Breadcrumbs -->
+<div class="px-8 py-4 bg-surface-dim/80 border-b border-surface-border flex-none flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<!-- Floating/In-header quick expand button when sidebar is collapsed on desktop/mobile -->
+<button class="hidden p-2 rounded-lg bg-surface-card hover:bg-surface-elevated border border-surface-border text-slate-300 hover:text-white transition-all flex items-center gap-1.5 text-xs font-semibold" id="contentMenuTrigger" onclick="toggleSidebar()" title="Abrir menú de módulos">
+<span class="material-symbols-outlined text-[18px] text-brand-orange">menu</span>
+<span class="hidden sm:inline">Menú</span>
+</button>
+<div>
+<div class="flex items-center gap-2 text-xs font-mono">
+<span class="text-brand-orange font-semibold" id="moduleStageLabel">ETAPA 1: FUNDAMENTOS</span>
+<span class="text-slate-600">•</span>
+<span class="text-slate-400" id="moduleStepCountLabel">Paso 01 de 15</span>
+</div>
+<h2 class="text-xl font-bold text-white tracking-tight mt-0.5" id="moduleHeadingTitle">01. Portada &amp; Resumen</h2>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<!-- Mark Completed Toggle -->
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-card hover:bg-surface-elevated border border-surface-border text-xs font-semibold flex items-center gap-2 transition-all text-slate-300" id="toggleCompleteBtn" onclick="toggleCurrentModuleComplete()">
+<span class="material-symbols-outlined text-[18px] text-slate-500" id="toggleCompleteIcon">check_box_outline_blank</span>
+<span id="toggleCompleteText">Marcar Hecho</span>
+</button>
+<!-- Module Selector dropdown -->
+<div class="relative">
+<select class="bg-surface-card text-xs text-slate-200 border border-surface-border rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:border-brand-orange cursor-pointer appearance-none" id="moduleSelectDropdown" onchange="jumpToModule(parseInt(this.value))">
+<optgroup label="Etapa 1: Fundamentos">
+<option value="1">01. Portada &amp; Resumen</option>
+<option value="2">02. Git vs GitHub</option>
+<option value="3">03. Instalación &amp; CLI</option>
+</optgroup>
+<optgroup label="Etapa 2: Cuentas &amp; Setup (Equipos Compartidos)">
+<option value="4">04. Verificar Cuentas Existentes (Equipo Compartido)</option>
+<option value="5">05. Credenciales en Windows &amp; VS Code</option>
+<option value="6">06. Nueva Configuración de Usuario</option>
+</optgroup>
+<optgroup label="Etapa 3: Proyecto &amp; Código">
+<option value="7">07. Repositorio Remoto</option>
+<option value="8">08. Proyecto Local &amp; README</option>
+<option value="9">09. Script Python calcularSalario</option>
+</optgroup>
+<optgroup label="Etapa 4: Flujo Git Local">
+<option value="10">10. git init &amp; status</option>
+<option value="11">11. git add &amp; commit</option>
+</optgroup>
+<optgroup label="Etapa 5: Despliegue en GitHub">
+<option value="12">12. Conectar Remoto</option>
+<option value="13">13. git push &amp; verificación</option>
+</optgroup>
+<optgroup label="Etapa 6: Entrega &amp; Soporte">
+<option value="14">14. Checklist de Entrega</option>
+<option value="15">15. Troubleshooting</option>
+</optgroup>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[16px]">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Scrollable Module Container -->
+<div class="flex-1 overflow-y-auto p-8" id="moduleScrollContainer">
+<div class="max-w-5xl mx-auto pb-12">
+<!-- ================= MODULE 1: PORTADA & RESUMEN ================= -->
+<section class="module-pane active space-y-6" id="module-1">
+<!-- Hero banner -->
+<div class="p-8 rounded-2xl bg-gradient-to-br from-surface-card to-surface-dim border border-surface-border relative overflow-hidden shadow-xl">
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10 max-w-3xl">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/20 border border-brand-orange/30 text-brand-orange text-xs font-mono font-bold mb-4">
+<span class="w-2 h-2 rounded-full bg-brand-orange animate-ping"></span>
+                  GUÍA PRÁCTICA COMPLETA DE APRENDIZAJE
+                </div>
+<h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight mb-4">
+                  Domina el Flujo de Trabajo en <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-400">Git &amp; GitHub</span> desde Cero
+                </h1>
+<p class="text-slate-300 text-sm sm:text-base leading-relaxed font-body mb-6">
+                  Aprende la arquitectura real de control de versiones distribuido. A lo largo de esta sesión construirás un programa en Python (<code class="text-brand-orange bg-surface-lowest px-1.5 py-0.5 rounded font-mono text-xs">calcularSalario.py</code>), configurarás tus credenciales en Windows/VS Code, inicializarás tu repositorio local y publicarás tus cambios en GitHub.
+                </p>
+<div class="flex flex-wrap gap-3">
+<button class="px-5 py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold text-xs tracking-wide shadow-lg shadow-brand-orange/25 transition-all flex items-center gap-2" onclick="jumpToModule(2)">
+<span>Empezar con Paso 2: Git vs GitHub</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+<button class="px-4 py-2.5 rounded-xl bg-surface-base hover:bg-surface-elevated text-slate-200 border border-surface-border font-medium text-xs transition-colors flex items-center gap-2" onclick="jumpToModule(9)">
+<span class="material-symbols-outlined text-brand-emerald text-[16px]">code</span>
+<span>Explorar Script Python</span>
+</button>
+</div>
+</div>
+<!-- Interactive Architecture Pipeline diagram -->
+<div class="mt-8 pt-6 border-t border-surface-border">
+<div class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-brand-blue">alt_route</span>
+<span>Pipeline del Flujo Pedagógico</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center text-xs font-mono">
+<div class="p-3 rounded-lg bg-surface-lowest border border-brand-orange/40 text-brand-orange">
+<div class="font-bold">01 - 03</div>
+<div class="text-[11px] text-slate-400 mt-0.5">Fundamentos</div>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border text-slate-300">
+<div class="font-bold">04 - 06</div>
+<div class="text-[11px] text-slate-400 mt-0.5">Setup &amp; Config</div>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border text-slate-300">
+<div class="font-bold">07 - 09</div>
+<div class="text-[11px] text-slate-400 mt-0.5">Código Python</div>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border text-slate-300">
+<div class="font-bold">10 - 11</div>
+<div class="text-[11px] text-slate-400 mt-0.5">Git Local</div>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border text-slate-300">
+<div class="font-bold">12 - 13</div>
+<div class="text-[11px] text-slate-400 mt-0.5">Push Remoto</div>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border text-slate-300">
+<div class="font-bold">14 - 15</div>
+<div class="text-[11px] text-slate-400 mt-0.5">Validación</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Deliverables & Learning Objectives Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<div class="p-5 rounded-xl bg-surface-card border border-surface-border">
+<div class="w-10 h-10 rounded-lg bg-brand-emerald/15 text-brand-emerald flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[22px]">code</span>
+</div>
+<h3 class="font-bold text-white text-sm">1. Script en Python</h3>
+<p class="text-xs text-slate-400 mt-1 font-body">Archivo funcional <code class="text-slate-200">calcularSalario.py</code> con validación de entradas y cálculo de deducciones porcentuales.</p>
+</div>
+<div class="p-5 rounded-xl bg-surface-card border border-surface-border">
+<div class="w-10 h-10 rounded-lg bg-brand-orange/15 text-brand-orange flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[22px]">description</span>
+</div>
+<h3 class="font-bold text-white text-sm">2. Documento README.md</h3>
+<p class="text-xs text-slate-400 mt-1 font-body">Estructurado profesionalmente en formato Markdown explicando instalación, ejecución y autoría.</p>
+</div>
+<div class="p-5 rounded-xl bg-surface-card border border-surface-border">
+<div class="w-10 h-10 rounded-lg bg-brand-blue/15 text-brand-blue flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[22px]">cloud_upload</span>
+</div>
+<h3 class="font-bold text-white text-sm">3. Repositorio Remoto</h3>
+<p class="text-xs text-slate-400 mt-1 font-body">Publicado en GitHub bajo el nombre <code class="text-slate-200">introduccion_git</code> con commits descriptivos y rama principal main.</p>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 2: GIT VS GITHUB ================= -->
+<section class="module-pane space-y-6" id="module-2">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Git Card -->
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<span class="px-2.5 py-1 rounded bg-brand-orange/15 text-brand-orange text-xs font-mono font-bold">MOTOR LOCAL</span>
+<span class="material-symbols-outlined text-brand-orange text-[28px]">terminal</span>
+</div>
+<h3 class="text-lg font-bold text-white mb-2">¿Qué es Git?</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-4">
+                    Git es un <strong>sistema de control de versiones distribuido</strong> de código abierto. Se ejecuta de forma 100% local en tu disco duro para rastrear cambios en el código sin requerir conexión a internet.
+                  </p>
+<ul class="space-y-2 text-xs text-slate-400 font-body">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-emerald text-[16px] shrink-0">check</span>
+<span>Historial completo e inmutable guardado en la carpeta oculta <code class="text-slate-200">.git</code>.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-emerald text-[16px] shrink-0">check</span>
+<span>Creación ágil de ramas (<code class="text-slate-200">branches</code>) para experimentar sin riesgos.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-emerald text-[16px] shrink-0">check</span>
+<span>Manejo de estados: Working Directory, Staging y Repository.</span>
+</li>
+</ul>
+</div>
+<div class="mt-6 p-3 rounded-lg bg-surface-lowest border border-surface-border font-mono text-xs text-slate-400">
+<span class="text-brand-orange">$</span> git --version <span class="text-slate-600">// Local CLI</span>
+</div>
+</div>
+<!-- GitHub Card -->
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<span class="px-2.5 py-1 rounded bg-brand-blue/15 text-brand-blue text-xs font-mono font-bold">PLATAFORMA CLOUD</span>
+<span class="material-symbols-outlined text-brand-blue text-[28px]">cloud</span>
+</div>
+<h3 class="text-lg font-bold text-white mb-2">¿Qué es GitHub?</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-4">
+                    GitHub es una <strong>plataforma de alojamiento en la nube</strong> construida sobre Git. Facilita la colaboración en equipo, respaldo remoto, revisión de código mediante Pull Requests y portafolio profesional.
+                  </p>
+<ul class="space-y-2 text-xs text-slate-400 font-body">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-blue text-[16px] shrink-0">check</span>
+<span>Servidor centralizado accesible vía HTTPS o llaves SSH.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-blue text-[16px] shrink-0">check</span>
+<span>Gestión de Issues, Pull Requests, Automatizaciones CI/CD (GitHub Actions).</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-blue text-[16px] shrink-0">check</span>
+<span>Visibilidad de repositorios: Públicos o Privados para tu equipo.</span>
+</li>
+</ul>
+</div>
+<div class="mt-6 p-3 rounded-lg bg-surface-lowest border border-surface-border font-mono text-xs text-slate-400">
+<span class="text-brand-blue">URL:</span> https://github.com/usuario/mi-repo.git
+                </div>
+</div>
+</div>
+<!-- Conceptual Visual Comparison -->
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h4 class="font-bold text-white text-sm mb-4">Analogía Esencial</h4>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-body">
+<div class="p-4 rounded-lg bg-surface-base border border-surface-border">
+<span class="font-mono text-brand-orange font-bold uppercase block mb-1">Git es como:</span>
+<p class="text-slate-300">El motor de tu automóvil o una cámara de fotos local. Funciona donde sea, contigo, sin conexión a internet.</p>
+</div>
+<div class="p-4 rounded-lg bg-surface-base border border-surface-border">
+<span class="font-mono text-brand-blue font-bold uppercase block mb-1">GitHub es como:</span>
+<p class="text-slate-300">Instagram o Google Drive. El lugar público o compartido donde subes las fotos para que otros las vean o colaboren.</p>
+</div>
+<div class="p-4 rounded-lg bg-surface-base border border-surface-border">
+<span class="font-mono text-brand-emerald font-bold uppercase block mb-1">El Git Push:</span>
+<p class="text-slate-300">El camión de transporte que sincroniza los paquetes desde tu máquina local hacia el almacén en la nube.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 3: INSTALACION & CLI ================= -->
+<section class="module-pane space-y-6" id="module-3">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h3 class="text-lg font-bold text-white mb-2">Instalación y Verificación de Git CLI</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Para interactuar con Git desde Visual Studio Code o la consola de comandos de Windows (PowerShell/CMD), debes tener instalado el paquete oficial de <strong>Git for Windows</strong>.
+              </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Instructions -->
+<div class="space-y-3 font-body text-xs text-slate-300">
+<div class="p-3.5 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3">
+<span class="w-6 h-6 rounded bg-brand-orange/20 text-brand-orange flex items-center justify-center font-bold shrink-0">1</span>
+<div>
+<strong class="text-white block">Descargar el Instalador:</strong>
+<span>Visita <a class="text-brand-orange hover:underline font-mono" href="https://git-scm.com/downloads" target="_blank">git-scm.com/downloads</a> y baja la versión de 64-bit para Windows.</span>
+</div>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3">
+<span class="w-6 h-6 rounded bg-brand-orange/20 text-brand-orange flex items-center justify-center font-bold shrink-0">2</span>
+<div>
+<strong class="text-white block">Ajustes recomendados:</strong>
+<span>Acepta el editor predeterminado (puedes seleccionar VS Code) y mantén la opción <em>"Git from the command line and also from 3rd-party software"</em>.</span>
+</div>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3">
+<span class="w-6 h-6 rounded bg-brand-orange/20 text-brand-orange flex items-center justify-center font-bold shrink-0">3</span>
+<div>
+<strong class="text-white block">Reiniciar Terminales:</strong>
+<span>Cierra todas las ventanas de VS Code para que reconozca el nuevo PATH del sistema.</span>
+</div>
+</div>
+</div>
+<!-- CLI Terminal Interactive Simulator -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3 border-b border-surface-border mb-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+<span class="text-[11px] font-mono text-slate-400 ml-2">powershell.exe</span>
+</div>
+<button class="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git --version', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs space-y-2">
+<div class="text-slate-500">// Comprueba que Git responda correctamente:</div>
+<div class="text-white">
+<span class="text-brand-orange">PS C:\Users\dev&gt;</span> git --version
+                      </div>
+<div class="p-2.5 rounded bg-surface-base border border-surface-border text-brand-emerald text-xs" id="cliOutputSim">
+                        git version 2.44.0.windows.1<br/>
+<span class="text-slate-400 text-[11px]">Git CLI está correctamente enlazado al PATH del sistema.</span>
+</div>
+</div>
+</div>
+<button class="mt-4 w-full py-2 rounded-lg bg-surface-card hover:bg-surface-elevated text-brand-emerald border border-brand-emerald/30 font-mono text-xs font-semibold flex items-center justify-center gap-2 transition-colors" onclick="simulateCliRun()">
+<span class="material-symbols-outlined text-[16px]">play_circle</span>
+<span>Probar comando en consola simulada</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 4: VERIFICAR CUENTAS EXISTENTES (EQUIPO COMPARTIDO) ================= -->
+<section class="module-pane space-y-6" id="module-4">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<!-- Badge and Context Notice -->
+<div class="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-body mb-6">
+<span class="material-symbols-outlined text-[22px] text-amber-400 shrink-0">devices</span>
+<div>
+<strong class="font-bold text-amber-200 block text-sm">Escenario Clave: Sala de Cómputo, Universidad o PC Compartido</strong>
+                  En equipos comunitarios, otros usuarios dejan frecuentemente sus nombres y correos configurados. Si no inspeccionas primero la máquina, <strong>todos tus commits quedarán registrados con el nombre de otra persona</strong> y la entrega de tu práctica será rechazada por autoría incorrecta.
+                </div>
+</div>
+<h3 class="text-lg font-bold text-white mb-2">1° Paso: Inspeccionar la Configuración Actual de Git</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Antes de realizar cualquier cambio, ejecuta estos comandos en tu terminal (PowerShell o Git Bash) para comprobar si el equipo ya tiene un autor asignado:
+              </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+<!-- Command 1: Inspect Global Config -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-blue flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+                        1. Inspeccionar variables globales
+                      </span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git config --global --list', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200 mb-2">
+<span class="text-brand-blue">$</span> git config --global --list
+</div>
+<p class="text-[11px] text-slate-400 font-body mb-2">Muestra los valores vigentes de <code class="text-slate-200 font-mono">user.name</code> y <code class="text-slate-200 font-mono">user.email</code>.</p>
+</div>
+<div class="p-2.5 rounded bg-surface-base border border-surface-border font-mono text-[11px] text-amber-300">
+                    user.name=estudiante_anterior<br/>
+                    user.email=usuario.anterior@universidad.edu
+                  </div>
+</div>
+<!-- Command 2: Show Origin of Config -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-blue flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">source</span>
+                        2. Ver archivo de origen (.gitconfig)
+                      </span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git config --list --show-origin', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200 mb-2">
+<span class="text-brand-blue">$</span> git config --list --show-origin
+</div>
+<p class="text-[11px] text-slate-400 font-body mb-2">Te indica exactamente la ruta física del archivo <code class="text-slate-200 font-mono">.gitconfig</code> que contiene dicha cuenta.</p>
+</div>
+<div class="p-2.5 rounded bg-surface-base border border-surface-border font-mono text-[11px] text-slate-400">
+                    file:C:/Users/Alumno/.gitconfig user.name=...<br/>
+                    file:C:/Users/Alumno/.gitconfig user.email=...
+                  </div>
+</div>
+</div>
+<!-- Clean up if not yours -->
+<div class="p-5 rounded-xl bg-surface-base border border-surface-border">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-brand-orange text-[20px]">delete_sweep</span>
+<h4 class="font-bold text-white text-sm">¿La cuenta mostrada NO es la tuya? Desvincula con `unset`</h4>
+</div>
+<p class="text-xs text-slate-300 font-body mb-4">
+                Si ves el nombre de otro estudiante o colega, elimina la identidad registrada con los comandos de desvinculación antes de crear nuevos repositorios:
+              </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border flex items-center justify-between">
+<div>
+<span class="text-brand-orange">$</span> git config --global --unset user.name
+</div>
+<button class="text-slate-400 hover:text-white shrink-0 ml-2" onclick="copyCode('git config --global --unset user.name', this)">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border flex items-center justify-between">
+<div>
+<span class="text-brand-orange">$</span> git config --global --unset user.email
+</div>
+<button class="text-slate-400 hover:text-white shrink-0 ml-2" onclick="copyCode('git config --global --unset user.email', this)">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+</div>
+<p class="mt-3 text-[11px] text-brand-emerald font-body flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+<span>Al hacer unset, la máquina queda limpia y lista para recibir tu identidad sin sobreescrituras corruptas.</span>
+</p>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 5: CREDENCIALES WINDOWS & VS CODE ================= -->
+<section class="module-pane space-y-6" id="module-5">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<div class="flex items-start gap-3 p-4 rounded-xl bg-red-950/40 border border-red-500/50 text-red-200 text-xs font-body mb-6">
+<span class="material-symbols-outlined text-red-400 text-[22px] shrink-0">lock_reset</span>
+<div>
+<strong class="font-bold text-red-300 block text-sm">2° Paso: Desconectar tokens y contraseñas previas</strong>
+                Incluso tras cambiar el <code class="font-mono bg-surface-lowest px-1 py-0.5 rounded text-white">user.name</code>, Windows y VS Code retienen en memoria el <strong>Token de GitHub del usuario anterior</strong> a través del <em>Git Credential Manager</em>. Si intentas hacer push, obtendrás el error <code class="font-mono text-white bg-surface-lowest px-1 py-0.5 rounded">403: Permission denied to other_user</code>.
+              </div>
+</div>
+<h3 class="text-lg font-bold text-white mb-2">Revisar Credenciales de Usuario en Windows / VS Code</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Sigue esta ruta de 2 verificaciones para garantizar que tus peticiones se autentiquen con tus propios permisos:
+              </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Method 1: Windows Credential Manager -->
+<div class="p-5 rounded-xl bg-surface-base border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-3">
+<div class="w-7 h-7 rounded bg-brand-orange/20 text-brand-orange flex items-center justify-center font-bold text-xs font-mono">A</div>
+<h4 class="font-bold text-white text-sm">Administrador de Credenciales de Windows</h4>
+</div>
+<p class="text-xs text-slate-400 font-body mb-3">Ruta rápida para eliminar el token almacenado del sistema operativo:</p>
+<ol class="space-y-2 text-xs text-slate-300 font-body list-decimal list-inside">
+<li>Presiona <kbd class="px-1.5 py-0.5 rounded bg-surface-lowest border border-surface-border font-mono text-white text-[11px]">Win + R</kbd>, escribe <code class="text-brand-orange font-mono">control keymgr.dll</code> y presiona Enter (o busca <em>"Administrador de Credenciales"</em>).</li>
+<li>Haz clic en el recuadro <strong>Credenciales de Windows</strong>.</li>
+<li>Baja a <strong>Credenciales genéricas</strong>.</li>
+<li>Localiza la entrada <code class="text-brand-orange font-mono">git:https://github.com</code> o cualquier ítem llamado <code class="text-slate-200 font-mono">GitHub</code>.</li>
+<li>Haz clic en <strong>Quitar</strong> y confirma.</li>
+</ol>
+</div>
+<div class="mt-4 p-3 rounded-lg bg-surface-lowest border border-surface-border font-mono text-[11px] text-slate-400">
+<span class="text-brand-orange">Estado:</span> Token antiguo purgado con éxito.
+                </div>
+</div>
+<!-- Method 2: VS Code Account Logoff -->
+<div class="p-5 rounded-xl bg-surface-base border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-3">
+<div class="w-7 h-7 rounded bg-brand-blue/20 text-brand-blue flex items-center justify-center font-bold text-xs font-mono">B</div>
+<h4 class="font-bold text-white text-sm">Cierre de Sesión en Visual Studio Code</h4>
+</div>
+<p class="text-xs text-slate-400 font-body mb-3">Si VS Code quedó enlazado a otra cuenta en la barra de estado:</p>
+<ul class="space-y-2.5 text-xs text-slate-300 font-body">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-blue text-[16px] shrink-0">account_circle</span>
+<span>Dirige tu mirada a la esquina inferior izquierda de VS Code y haz clic en el ícono de <strong>Cuentas</strong> (avatar circular).</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-red-400 text-[16px] shrink-0">logout</span>
+<span>Si figura una cuenta ajena (ej: <em>GitHub - usuario_antiguo</em>), pulsa sobre ella y selecciona <strong>"Sign Out" (Cerrar sesión)</strong>.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-brand-emerald text-[16px] shrink-0">refresh</span>
+<span>Reinicia VS Code o abre una nueva ventana limpia con <kbd class="px-1 bg-surface-lowest border border-surface-border font-mono text-white text-[11px]">Ctrl + Shift + N</kbd>.</span>
+</li>
+</ul>
+</div>
+<div class="mt-4 p-3 rounded-lg bg-surface-lowest border border-surface-border font-mono text-[11px] text-brand-emerald">
+<span class="text-brand-blue">VS Code:</span> Listo para inicio de sesión en limpio.
+                </div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 6: NUEVA CONFIGURACION DE USUARIO ================= -->
+<section class="module-pane space-y-6" id="module-6">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<div class="flex items-start gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-body mb-6">
+<span class="material-symbols-outlined text-emerald-400 text-[22px] shrink-0">person_add</span>
+<div>
+<strong class="font-bold text-emerald-200 block text-sm">3° Paso: Aplicar tu Propia Configuración y Autoría</strong>
+                Ahora que el entorno está completamente limpio, asigna tus credenciales oficiales de GitHub. Así cada commit que generes en el proyecto quedará firmado bajo tu nombre y enlazará tu portafolio correctamente.
+              </div>
+</div>
+<h3 class="text-lg font-bold text-white mb-2">Configurar tu Propia Cuenta y Autoría</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Ejecuta los siguientes comandos en tu terminal reemplazando con tus datos reales de GitHub:
+              </p>
+<!-- Commands grid -->
+<div class="space-y-4">
+<!-- Command 1: User Name -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-orange">1. Registrar tu Nombre y Apellido</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git config --global user.name &quot;Tu Nombre y Apellido&quot;', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200">
+<span class="text-brand-orange">$</span> git config --global user.name <span class="text-brand-emerald">"Tu Nombre y Apellido"</span>
+</div>
+<p class="text-[11px] text-slate-400 mt-2 font-body">Este nombre se mostrará públicamente en el historial del repositorio.</p>
+</div>
+<!-- Command 2: User Email -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-orange">2. Registrar tu Correo de GitHub</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git config --global user.email &quot;tu-correo@github.com&quot;', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200">
+<span class="text-brand-orange">$</span> git config --global user.email <span class="text-brand-emerald">"tu-correo@github.com"</span>
+</div>
+<p class="text-[11px] text-slate-400 mt-2 font-body"><strong>Importante:</strong> Debe ser exactamente el mismo email asociado a tu cuenta en <a class="text-brand-blue hover:underline" href="https://github.com" target="_blank">github.com</a> para vincular tu avatar y contribuciones.</p>
+</div>
+<!-- Command 3: Validation -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-blue">3. Validar que tu Usuario esté Activo</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git config --list', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200 mb-2">
+<span class="text-brand-blue">$</span> git config --list
+</div>
+<div class="p-2.5 rounded bg-surface-base border border-surface-border font-mono text-[11px] text-brand-emerald">
+                    user.name=Tu Nombre y Apellido<br/>
+                    user.email=tu-correo@github.com<br/>
+                    core.autocrlf=true
+                  </div>
+</div>
+</div>
+<!-- Linking in VS Code -->
+<div class="mt-6 p-4 rounded-xl bg-surface-base border border-surface-border flex items-start gap-3">
+<span class="material-symbols-outlined text-brand-emerald text-[22px] shrink-0">vpn_key</span>
+<div class="text-xs font-body text-slate-300">
+<strong class="text-white block mb-0.5">Vincular inicio de sesión limpio en VS Code</strong>
+                Cuando realices tu primer <code class="text-slate-200 font-mono">git push</code> más adelante, VS Code o Git abrirán automáticamente una ventana en tu navegador solicitando autorización con el botón <em>"Authorize GitCredentialManager"</em>. Al estar libre de sesiones previas, iniciarás sesión con tus credenciales y quedará guardado para tu sesión de trabajo.
+              </div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 7: REPOSITORIO REMOTO ================= -->
+<section class="module-pane space-y-6" id="module-7">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h3 class="text-lg font-bold text-white mb-2">Crear el Repositorio Vacío en GitHub</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Crearemos el contenedor en la nube donde vivirán las copias de seguridad de nuestro código.
+              </p>
+<!-- Critical warning box -->
+<div class="p-5 rounded-xl bg-red-950/40 border border-red-500/50 text-red-200 text-xs font-body mb-6">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-red-400 text-[24px] shrink-0">report</span>
+<div>
+<strong class="text-sm font-bold text-red-300 block mb-1">¡REGLA DE ORO! No agregues README desde GitHub</strong>
+                    Al crear el repositorio en GitHub, <strong>DEJA DESMARCADAS</strong> las siguientes casillas:
+                    <div class="mt-2 space-y-1 font-mono text-[11px] text-red-100">
+<div>[ ] Add a README file</div>
+<div>[ ] Add .gitignore</div>
+<div>[ ] Choose a license</div>
+</div>
+<p class="mt-2 text-slate-300">
+<strong>¿Por qué?</strong> Crearemos el archivo README y el código localmente. Si GitHub genera un commit remoto antes de subir el tuyo, los historiales quedarán desfasados provocando el error <em>unrelated histories</em>.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Recommendation Form -->
+<div class="p-4 rounded-xl bg-surface-base border border-surface-border">
+<h4 class="font-bold text-white text-xs font-mono uppercase mb-3">Parámetros del Repositorio</h4>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border">
+<span class="text-slate-400 block mb-1">Repository name:</span>
+<span class="font-mono text-brand-emerald font-bold text-sm">introduccion_git</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border">
+<span class="text-slate-400 block mb-1">Visibilidad:</span>
+<span class="font-mono text-brand-blue font-bold text-sm">Public (Público)</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 8: CARPETA LOCAL & README ================= -->
+<section class="module-pane space-y-6" id="module-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left: Instructions -->
+<div class="lg:col-span-5 p-6 rounded-xl bg-surface-card border border-surface-border flex flex-col justify-between">
+<div>
+<h3 class="text-lg font-bold text-white mb-2">Estructura del Proyecto Local</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-4">
+                    Crea una carpeta en tu disco llamada <code class="text-brand-orange font-mono">introduccion_git</code> y ábrela en VS Code (<kbd class="px-1 bg-surface-lowest border border-surface-border rounded text-[11px]">Archivo &gt; Abrir carpeta</kbd>).
+                  </p>
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border font-mono text-xs mb-4">
+<div class="text-brand-orange font-bold mb-2 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">folder_open</span>
+<span>introduccion_git/</span>
+</div>
+<div class="pl-6 space-y-1 text-slate-300">
+<div class="flex items-center gap-1.5 text-brand-blue">
+<span class="material-symbols-outlined text-[14px]">description</span>
+<span>README.md</span>
+</div>
+<div class="flex items-center gap-1.5 text-brand-emerald">
+<span class="material-symbols-outlined text-[14px]">code</span>
+<span>calcularSalario.py</span>
+</div>
+</div>
+</div>
+<p class="text-xs text-slate-400 font-body">
+                    El archivo <code class="text-slate-200 font-mono">README.md</code> es la portada visual de tu repositorio que GitHub muestra automáticamente a quien consulte tu código.
+                  </p>
+</div>
+<button class="mt-4 w-full py-2.5 rounded-lg bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2" onclick="copyCode(document.getElementById('readmeTemplateCode').innerText, this)">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span>Copiar Plantilla Markdown</span>
+</button>
+</div>
+<!-- Right: README Preview -->
+<div class="lg:col-span-7 p-6 rounded-xl bg-surface-card border border-surface-border flex flex-col">
+<div class="flex items-center justify-between pb-3 border-b border-surface-border mb-3">
+<div class="flex items-center gap-2 text-xs font-mono text-brand-blue font-bold">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span>Vista Previa: README.md</span>
+</div>
+<span class="text-[11px] font-mono text-slate-500">Markdown Estándar</span>
+</div>
+<div class="p-5 rounded-xl bg-surface-lowest border border-surface-border font-body text-xs text-slate-300 space-y-3 flex-1 overflow-y-auto" id="readmeTemplateCode">
+<div class="font-extrabold text-base text-white border-b border-surface-border pb-2"># Sistema de Cálculo Salarial</div>
+<p class="text-slate-400">Script didáctico en Python desarrollado como práctica para la adopción y despliegue del flujo de trabajo con Git y GitHub.</p>
+<div class="font-bold text-sm text-brand-orange mt-2">## Requisitos</div>
+<ul class="list-disc list-inside space-y-1 text-slate-400">
+<li>Python 3.10 o superior</li>
+<li>Git CLI 2.40+</li>
+</ul>
+<div class="font-bold text-sm text-brand-orange mt-2">## Ejecución</div>
+<div class="p-2 rounded bg-surface-base border border-surface-border font-mono text-[11px] text-brand-emerald">
+                    python calcularSalario.py
+                  </div>
+<div class="font-bold text-sm text-brand-orange mt-2">## Autor</div>
+<p class="text-slate-400">Estudiante de Desarrollo de Software / Control de Versiones.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 9: SCRIPT PYTHON ================= -->
+<section class="module-pane space-y-6" id="module-9">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Code view -->
+<div class="lg:col-span-7 p-6 rounded-xl bg-surface-card border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3 border-b border-surface-border mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-brand-emerald text-[20px]">code</span>
+<span class="font-mono text-xs font-bold text-white">calcularSalario.py</span>
+</div>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode(document.getElementById('pythonRawCode').innerText, this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar Código</span>
+</button>
+</div>
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border font-mono text-xs text-slate-200 overflow-x-auto leading-relaxed">
+<pre id="pythonRawCode"><code># calcularSalario.py
+# Práctica de Control de Versiones con Git y GitHub
+
+def calcular_salario(horas, valor_hora):
+    salario_bruto = horas * valor_hora
+    # Deducciones de salud y pension (8% total)
+    deducciones = salario_bruto * 0.08
+    salario_neto = salario_bruto - deducciones
+    return salario_bruto, deducciones, salario_neto
+
+def main():
+    print("=== SISTEMA DE CALCULO SALARIAL ===")
+    try:
+        horas = float(input("Ingrese horas trabajadas: "))
+        tarifa = float(input("Ingrese valor por hora: "))
+        
+        bruto, deduccion, neto = calcular_salario(horas, tarifa)
+        
+        print(f"\nSalario Bruto:     ${bruto:,.2f}")
+        print(f"Deducciones (8%):  ${deduccion:,.2f}")
+        print(f"Total a Pagar:     ${neto:,.2f}")
+    except ValueError:
+        print("Error: Ingresa valores numericos validos.")
+
+if __name__ == "__main__":
+    main()</code></pre>
+</div>
+</div>
+<div class="mt-4 text-xs text-slate-400 font-body">
+                  Guarda este archivo exactamente con el nombre <code class="text-brand-orange font-mono">calcularSalario.py</code> dentro de tu carpeta del proyecto.
+                </div>
+</div>
+<!-- Interactive Simulator -->
+<div class="lg:col-span-5 p-6 rounded-xl bg-surface-card border border-surface-border flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3 border-b border-surface-border mb-4">
+<span class="font-mono text-xs font-bold text-brand-emerald">Simulador Interactivo Python</span>
+<span class="text-[11px] font-mono text-slate-500">Live Test</span>
+</div>
+<div class="space-y-3 font-body text-xs">
+<div>
+<label class="block text-slate-400 mb-1 font-mono text-[11px]">Horas trabajadas:</label>
+<input class="w-full px-3 py-2 rounded-lg bg-surface-lowest border border-surface-border text-white font-mono text-xs focus:outline-none focus:border-brand-emerald" id="simHours" type="number" value="40"/>
+</div>
+<div>
+<label class="block text-slate-400 mb-1 font-mono text-[11px]">Valor por hora ($):</label>
+<input class="w-full px-3 py-2 rounded-lg bg-surface-lowest border border-surface-border text-white font-mono text-xs focus:outline-none focus:border-brand-emerald" id="simRate" type="number" value="25000"/>
+</div>
+<button class="w-full py-2.5 rounded-lg bg-brand-emerald hover:bg-brand-emerald-dark text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2" onclick="runPythonSim()">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+<span>Ejecutar Script Simulado</span>
+</button>
+</div>
+<!-- Terminal response -->
+<div class="mt-4 p-4 rounded-xl bg-surface-lowest border border-surface-border font-mono text-xs space-y-1.5" id="simTerminalResult">
+<div class="text-slate-500">$ python calcularSalario.py</div>
+<div class="text-slate-300">=== SISTEMA DE CALCULO SALARIAL ===</div>
+<div class="text-slate-400">Salario Bruto:     $1,000,000.00</div>
+<div class="text-slate-400">Deducciones (8%):  $80,000.00</div>
+<div class="text-brand-emerald font-bold">Total a Pagar:     $920,000.00</div>
+</div>
+</div>
+<div class="mt-4 text-[11px] font-mono text-slate-500 text-center">
+                  Prueba valores antes de registrar el archivo en Git.
+                </div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 10: GIT INIT & STATUS ================= -->
+<section class="module-pane space-y-6" id="module-10">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h3 class="text-lg font-bold text-white mb-2">Inicialización del Repositorio Local</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                El comando <code class="text-brand-orange font-mono">git init</code> crea el almacén de control de versiones dentro de tu carpeta de trabajo.
+              </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<!-- git init -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-orange">Paso 1: Inicializar</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git init', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200 mb-2">
+<span class="text-brand-orange">$</span> git init
+                  </div>
+<div class="p-2.5 rounded bg-surface-base border border-surface-border font-mono text-[11px] text-brand-emerald">
+                    Initialized empty Git repository in C:/.../introduccion_git/.git/
+                  </div>
+</div>
+<!-- git status -->
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-blue">Paso 2: Consultar Estado</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git status', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200 mb-2">
+<span class="text-brand-blue">$</span> git status
+                  </div>
+<div class="p-2.5 rounded bg-surface-base border border-surface-border font-mono text-[11px] text-red-400">
+                    Untracked files:<br/>
+                      README.md<br/>
+                      calcularSalario.py
+                  </div>
+</div>
+</div>
+<!-- Anatomía .git -->
+<div class="p-4 rounded-xl bg-surface-base border border-surface-border">
+<h4 class="text-xs font-mono uppercase text-slate-400 font-bold mb-3">¿Qué sucede tras ejecutar git init?</h4>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-body">
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border">
+<strong class="font-mono text-brand-orange block mb-1">Carpeta .git</strong>
+<span class="text-slate-400">Es una carpeta oculta que contiene el árbol de objetos binarios e índices. ¡Nunca la borres!</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border">
+<strong class="font-mono text-brand-blue block mb-1">Puntero HEAD</strong>
+<span class="text-slate-400">Apunta a la rama en la que estás situado actualmente para registrar los próximos commits.</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-lowest border border-surface-border">
+<strong class="font-mono text-brand-emerald block mb-1">Estado Untracked</strong>
+<span class="text-slate-400">Git ve tus archivos pero no los está rastreando hasta que los añadas con git add.</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 11: GIT ADD & COMMIT ================= -->
+<section class="module-pane space-y-6" id="module-11">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h3 class="text-lg font-bold text-white mb-2">Los Tres Estados de Git: Staging &amp; Commit</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                En Git los cambios no se guardan de golpe: primero los preparas en el <strong>Staging Area</strong> con <code class="text-brand-orange font-mono">git add</code> y luego los confirmas con <code class="text-brand-emerald font-mono">git commit</code>.
+              </p>
+<!-- 3-State visual diagram -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center">
+<div class="p-5 rounded-xl bg-surface-base border border-surface-border flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[20px]">folder_open</span>
+</div>
+<span class="font-mono font-bold text-xs text-red-400 mb-1">1. Working Directory</span>
+<p class="text-xs text-slate-400 font-body">Tus archivos en el disco con modificaciones pendientes.</p>
+</div>
+<div class="p-5 rounded-xl bg-surface-base border border-brand-orange/40 flex flex-col items-center relative">
+<div class="w-10 h-10 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+</div>
+<span class="font-mono font-bold text-xs text-brand-orange mb-1">2. Staging Area</span>
+<p class="text-xs text-slate-400 font-body">La "caja" de cambios listos que formarán parte del commit.</p>
+</div>
+<div class="p-5 rounded-xl bg-surface-base border border-brand-emerald/40 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-brand-emerald/20 text-brand-emerald flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+</div>
+<span class="font-mono font-bold text-xs text-brand-emerald mb-1">3. Repository (.git)</span>
+<p class="text-xs text-slate-400 font-body">Instantánea guardada de forma permanente con código SHA-1.</p>
+</div>
+</div>
+<!-- Action commands -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-orange">Paso A: Añadir al Staging</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git add .', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200">
+<span class="text-brand-orange">$</span> git add .
+                  </div>
+<p class="text-[11px] text-slate-400 mt-2 font-body">El punto (<code class="text-white">.</code>) indica añadir todos los archivos de la carpeta actual.</p>
+</div>
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-emerald">Paso B: Guardar Commit</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git commit -m &quot;feat: estructura inicial con calcularSalario y README&quot;', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200">
+<span class="text-brand-emerald">$</span> git commit -m <span class="text-slate-300">"feat: estructura inicial con calcularSalario y README"</span>
+</div>
+<p class="text-[11px] text-slate-400 mt-2 font-body">El mensaje con <code class="text-white">-m</code> debe describir con precisión qué se agregó.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 12: CONECTAR REMOTO ================= -->
+<section class="module-pane space-y-6" id="module-12">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h3 class="text-lg font-bold text-white mb-2">Vincular tu Repositorio Local con GitHub</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Ingresa tu nombre de usuario exacto de GitHub para generar los comandos con tu URL personalizada:
+              </p>
+<!-- Dynamic Generator -->
+<div class="p-4 rounded-xl bg-surface-base border border-surface-border mb-6">
+<label class="block text-xs font-mono text-brand-orange font-bold mb-2 uppercase">Tu Usuario de GitHub:</label>
+<div class="flex flex-col sm:flex-row gap-3">
+<input class="flex-1 px-3.5 py-2 rounded-lg bg-surface-lowest border border-surface-border text-white font-mono text-xs focus:outline-none focus:border-brand-orange" id="githubUsernameInput" oninput="updateDynamicRemote()" placeholder="ej: carlos-developer" type="text" value="mi-usuario"/>
+<button class="px-4 py-2 rounded-lg bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold text-xs transition-colors" onclick="updateDynamicRemote()">
+                    Actualizar Comandos
+                  </button>
+</div>
+</div>
+<!-- Output commands -->
+<div class="space-y-4">
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-blue">1. Renombrar la rama principal a 'main'</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode('git branch -M main', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200">
+<span class="text-brand-blue">$</span> git branch -M main
+                  </div>
+</div>
+<div class="p-4 rounded-xl bg-surface-lowest border border-surface-border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-mono font-bold text-brand-emerald">2. Vincular el Servidor Remoto (origin)</span>
+<button class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1" onclick="copyCode(document.getElementById('dynRemoteCmd').innerText.replace('$ ', ''), this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<div class="font-mono text-xs text-slate-200 break-all" id="dynRemoteCmd">
+<span class="text-brand-emerald">$</span> git remote add origin https://github.com/<span class="text-brand-orange font-bold" id="dynUserSpan">mi-usuario</span>/introduccion_git.git
+                  </div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 13: GIT PUSH ================= -->
+<section class="module-pane space-y-6" id="module-13">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h3 class="text-lg font-bold text-white mb-2">El Despliegue: git push</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Es hora de enviar todos los commits locales hacia tu repositorio remoto en GitHub.
+              </p>
+<!-- Main Push Command -->
+<div class="p-5 rounded-xl bg-surface-lowest border border-surface-border mb-6">
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-mono font-bold text-brand-emerald uppercase">Comando de Envío</span>
+<button class="text-xs font-mono px-3 py-1 rounded bg-surface-base hover:bg-surface-elevated text-white flex items-center gap-1.5 border border-surface-border" onclick="copyCode('git push -u origin main', this)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copiar Comando</span>
+</button>
+</div>
+<div class="font-mono text-sm text-slate-100 mb-4">
+<span class="text-brand-emerald">$</span> git push -u origin main
+                </div>
+<!-- Terminal output simulation -->
+<div class="p-3.5 rounded-lg bg-surface-base border border-surface-border font-mono text-xs text-slate-400 space-y-1">
+<div>Enumerating objects: 4, done.</div>
+<div>Counting objects: 100% (4/4), done.</div>
+<div>Writing objects: 100% (4/4), 1.25 KiB | 1.25 MiB/s, done.</div>
+<div class="text-brand-emerald font-semibold">To https://github.com/usuario/introduccion_git.git</div>
+<div class="text-brand-emerald font-semibold">* [new branch]      main -&gt; main</div>
+<div class="text-brand-blue">branch 'main' set up to track 'origin/main'.</div>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-base border border-surface-border flex items-start gap-3">
+<span class="material-symbols-outlined text-brand-emerald text-[22px] shrink-0">task_alt</span>
+<div class="text-xs font-body text-slate-300">
+<strong class="text-white block mb-0.5">Verificación en el navegador</strong>
+                  Abre tu página de GitHub, recarga la pestaña y verifica que aparezcan tanto <code class="text-white font-mono">calcularSalario.py</code> como <code class="text-white font-mono">README.md</code>, con la rama configurada en <strong>main</strong>.
+                </div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 14: CHECKLIST DE ENTREGA ================= -->
+<section class="module-pane space-y-6" id="module-14">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-surface-border mb-6">
+<div>
+<h3 class="text-lg font-bold text-white">Checklist de Calificación &amp; Entrega</h3>
+<p class="text-xs text-slate-400 font-body">Verifica cada elemento antes de enviar el enlace final de tu tarea al docente o evaluador.</p>
+</div>
+<div class="px-3.5 py-1.5 rounded-lg bg-surface-base border border-surface-border font-mono text-xs flex items-center gap-2">
+<span class="text-slate-400">Verificados:</span>
+<span class="text-brand-emerald font-bold text-sm" id="chkCountBadge">0 / 14</span>
+</div>
+</div>
+<!-- 14 Item Checklist -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 font-body text-xs" id="checklistForm">
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">1. Git está instalado y comprobado con <code class="text-slate-100 font-mono">git --version</code>.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">2. En equipo compartido, verifiqué cuentas previas con <code class="text-slate-100 font-mono">git config --global --list</code>.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">3. Eliminé credenciales previas ajenas en Credenciales de Windows / VS Code.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">4. Apliqué mi propio <code class="text-slate-100 font-mono">user.name</code> y <code class="text-slate-100 font-mono">user.email</code> oficial.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">5. Repositorio en GitHub creado completamente vacío (sin README).</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">6. Carpeta local nombrada <code class="text-slate-100 font-mono">introduccion_git</code>.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">7. Archivo <code class="text-slate-100 font-mono">README.md</code> estructurado y guardado en local.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">8. Script <code class="text-slate-100 font-mono">calcularSalario.py</code> probado sin fallos de sintaxis.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">9. Carpeta inicializada con <code class="text-slate-100 font-mono">git init</code> (.git presente).</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">10. Archivos preparados al staging con <code class="text-slate-100 font-mono">git add .</code></span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">11. Commit registrado con mensaje descriptivo y claro.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">12. Rama unificada con el estándar <code class="text-slate-100 font-mono">main</code>.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">13. Origen remoto añadido correctamente como <code class="text-slate-100 font-mono">origin</code>.</span>
+</label>
+<label class="p-3 rounded-lg bg-surface-base border border-surface-border flex items-start gap-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+<input class="mt-0.5 rounded bg-surface-lowest border-surface-border text-brand-orange focus:ring-0" onchange="calcChecklist()" type="checkbox"/>
+<span class="text-slate-300">14. <code class="text-slate-100 font-mono">git push -u origin main</code> completado exitosamente.</span>
+</label>
+</div>
+<!-- Delivery link generator -->
+<div class="mt-6 p-5 rounded-xl bg-surface-lowest border border-surface-border">
+<span class="text-xs font-mono text-brand-emerald font-bold uppercase block mb-2">Generador de Enlace para el Formulario de Entrega</span>
+<div class="flex flex-col sm:flex-row gap-3">
+<input class="flex-1 px-3.5 py-2 rounded-lg bg-surface-base border border-surface-border text-white font-mono text-xs focus:outline-none focus:border-brand-emerald" id="submissionUserInput" oninput="updateSubmissionLink()" placeholder="Tu usuario de GitHub" type="text"/>
+<button class="px-4 py-2 rounded-lg bg-brand-emerald hover:bg-brand-emerald-dark text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2" onclick="copyCode(document.getElementById('submissionDisplay').innerText, this)">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span>Copiar Enlace de Entrega</span>
+</button>
+</div>
+<div class="mt-3 font-mono text-xs text-brand-blue break-all" id="submissionDisplay">
+                  https://github.com/tu-usuario/introduccion_git
+                </div>
+</div>
+</div>
+</section>
+<!-- ================= MODULE 15: TROUBLESHOOTING ================= -->
+<section class="module-pane space-y-6" id="module-15">
+<div class="p-6 rounded-xl bg-surface-card border border-surface-border">
+<h3 class="text-lg font-bold text-white mb-2">Troubleshooting: Solución a los 8 Errores Más Frecuentes</h3>
+<p class="text-xs text-slate-300 font-body leading-relaxed mb-6">
+                Haz clic en cualquier error para desplegar su causa exacta y cómo resolverlo de inmediato en tu consola:
+              </p>
+<!-- Accordions -->
+<div class="space-y-3 font-body text-xs" id="troubleAccordionList">
+<!-- Error 1 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-1')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">1. "git no se reconoce como un comando interno o externo"</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-1">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-1">
+<p><strong>Causa:</strong> Git no está en la variable <code class="text-white font-mono">PATH</code> de Windows o tu terminal estaba abierta antes de instalar Git.</p>
+<p><strong>Solución:</strong> Cierra y vuelve a abrir Visual Studio Code. Si persiste, reinstala Git marcando la opción <em>"Add Git to PATH"</em>.</p>
+</div>
+</div>
+<!-- Error 2 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-2')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">2. "Permission to user/repo denied to other_user" (403)</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-2">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-2">
+<p><strong>Causa:</strong> El Administrador de Credenciales de Windows guardó el login de otro usuario anterior en ese equipo compartido.</p>
+<p><strong>Solución:</strong> Ve a <em>Inicio &gt; Administrador de Credenciales &gt; Credenciales de Windows</em> y elimina la entrada <code class="text-brand-orange font-mono">git:https://github.com</code>.</p>
+</div>
+</div>
+<!-- Error 3 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-3')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">3. "fatal: remote origin already exists"</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-3">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-3">
+<p><strong>Causa:</strong> Ya agregaste un origen remoto con ese alias en un intento previo.</p>
+<p><strong>Solución:</strong> Actualízalo corriendo: <code class="text-brand-emerald font-mono">git remote set-url origin https://github.com/TU_USUARIO/introduccion_git.git</code> o bórralo con <code class="text-white font-mono">git remote remove origin</code>.</p>
+</div>
+</div>
+<!-- Error 4 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-4')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">4. "error: failed to push some refs... (Updates were rejected)"</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-4">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-4">
+<p><strong>Causa:</strong> Creaste el repositorio en GitHub con un README o licencia, por lo que el remoto tiene commits que no existen en tu disco local.</p>
+<p><strong>Solución:</strong> Ejecuta <code class="text-brand-orange font-mono">git pull origin main --allow-unrelated-histories</code>, resuelve cualquier conflicto de texto y vuelve a hacer push.</p>
+</div>
+</div>
+<!-- Error 5 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-5')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">5. "fatal: not a git repository (or any of the parent directories)"</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-5">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-5">
+<p><strong>Causa:</strong> Tu terminal está ubicada en otra carpeta o nunca ejecutaste <code class="text-white font-mono">git init</code> en esa ruta.</p>
+<p><strong>Solución:</strong> Revisa tu carpeta activa con <code class="text-white font-mono">pwd</code> o <code class="text-white font-mono">cd introduccion_git</code> y luego corre <code class="text-brand-emerald font-mono">git init</code>.</p>
+</div>
+</div>
+<!-- Error 6 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-6')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">6. "Author identity unknown: Please tell me who you are"</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-6">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-6">
+<p><strong>Causa:</strong> Intentaste hacer commit sin haber registrado tu nombre ni tu correo en Git.</p>
+<p><strong>Solución:</strong> Corre <code class="text-brand-emerald font-mono">git config --global user.name "Tu Nombre"</code> y <code class="text-brand-emerald font-mono">git config --global user.email "tu_email@ejemplo.com"</code>.</p>
+</div>
+</div>
+<!-- Error 7 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-7')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">7. "Support for password authentication was removed"</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-7">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-7">
+<p><strong>Causa:</strong> GitHub exige OAuth o un Personal Access Token (PAT) en vez de tu contraseña normal.</p>
+<p><strong>Solución:</strong> Inicia sesión con la ventana emergente de VS Code o genera un Token en <em>GitHub &gt; Settings &gt; Developer Settings &gt; Personal access tokens</em> con permiso de <code class="text-brand-blue font-mono">repo</code>.</p>
+</div>
+</div>
+<!-- Error 8 -->
+<div class="rounded-xl bg-surface-base border border-surface-border overflow-hidden">
+<button class="w-full p-4 text-left flex items-center justify-between hover:bg-surface-elevated transition-colors" onclick="toggleFaq('faq-8')">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400 text-[18px]">error</span>
+<strong class="text-white">8. "src refspec main does not match any"</strong>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform" id="icon-faq-8">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-lowest border-t border-surface-border text-slate-300 space-y-2" id="faq-8">
+<p><strong>Causa:</strong> Intentaste hacer <code class="text-white font-mono">git push origin main</code> sin haber realizado ningún commit primero.</p>
+<p><strong>Solución:</strong> Haz <code class="text-brand-emerald font-mono">git add .</code> y luego <code class="text-brand-emerald font-mono">git commit -m "primer commit"</code> antes de empujar los cambios.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- ================= BOTTOM PERSISTENT NAVIGATION BAR ================= -->
+<footer class="h-16 bg-surface-dim border-t border-surface-border px-8 flex-none flex items-center justify-between z-20">
+<!-- Previous Button -->
+<button class="px-4 py-2 rounded-lg bg-surface-card hover:bg-surface-elevated text-slate-300 hover:text-white border border-surface-border font-semibold text-xs flex items-center gap-2 transition-colors" id="prevStepBtn" onclick="navigateStep(-1)">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span>Paso Anterior</span>
+</button>
+<!-- Current Step Indicator -->
+<div class="hidden sm:flex items-center gap-2 font-mono text-xs text-slate-400">
+<span class="w-2 h-2 rounded-full bg-brand-orange"></span>
+<span id="footerStatusText">Módulo 1 de 15: Portada &amp; Resumen</span>
+</div>
+<!-- Next Button -->
+<button class="px-5 py-2 rounded-lg bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold text-xs flex items-center gap-2 shadow-md shadow-brand-orange/20 transition-all" id="nextStepBtn" onclick="navigateStep(1)">
+<span>Siguiente Paso</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</footer>
+</main>
+</div>
+<!-- Toast Notification System -->
+<div class="fixed bottom-20 right-6 z-50 px-4 py-2.5 rounded-lg bg-surface-card border border-brand-emerald text-brand-emerald text-xs font-mono flex items-center gap-2 shadow-2xl transition-all duration-300 opacity-0 translate-y-2 pointer-events-none" id="toastAlert">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span id="toastAlertMessage">Acción completada con éxito</span>
+</div>
+<!-- JAVASCRIPT CONTROLLER -->
+<script>
+    let currentModule = 1;
+    const totalModules = 15;
+    const completedModules = new Set([1]);
+    let isSidebarCollapsed = false;
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebarMenu');
+      const openBtn = document.getElementById('sidebarOpenBtn');
+      const contentTrigger = document.getElementById('contentMenuTrigger');
+      isSidebarCollapsed = !isSidebarCollapsed;
+
+      if (isSidebarCollapsed) {
+        sidebar.classList.add('-ml-80', 'opacity-0', 'pointer-events-none');
+        if (openBtn) openBtn.classList.remove('hidden');
+        if (contentTrigger) contentTrigger.classList.remove('hidden');
+        showToast("Menú lateral colapsado (pantalla completa)");
+      } else {
+        sidebar.classList.remove('-ml-80', 'opacity-0', 'pointer-events-none');
+        if (openBtn) openBtn.classList.add('hidden');
+        if (contentTrigger) contentTrigger.classList.add('hidden');
+        showToast("Menú lateral expandido");
+      }
+    }
+
+    const moduleMeta = {
+      1: { stage: "ETAPA 1: FUNDAMENTOS", title: "01. Portada & Resumen" },
+      2: { stage: "ETAPA 1: FUNDAMENTOS", title: "02. Git vs GitHub" },
+      3: { stage: "ETAPA 1: FUNDAMENTOS", title: "03. Instalación & CLI" },
+      4: { stage: "ETAPA 2: CUENTAS & SETUP", title: "04. Verificar Cuentas Existentes (Equipo Compartido)" },
+      5: { stage: "ETAPA 2: CUENTAS & SETUP", title: "05. Credenciales en Windows & VS Code" },
+      6: { stage: "ETAPA 2: CUENTAS & SETUP", title: "06. Nueva Configuración de Usuario" },
+      7: { stage: "ETAPA 3: PROYECTO & CÓDIGO", title: "07. Repositorio Remoto" },
+      8: { stage: "ETAPA 3: PROYECTO & CÓDIGO", title: "08. Proyecto Local & README" },
+      9: { stage: "ETAPA 3: PROYECTO & CÓDIGO", title: "09. Script Python calcularSalario" },
+      10: { stage: "ETAPA 4: FLUJO GIT LOCAL", title: "10. git init & status" },
+      11: { stage: "ETAPA 4: FLUJO GIT LOCAL", title: "11. git add & commit" },
+      12: { stage: "ETAPA 5: DESPLIEGUE EN GITHUB", title: "12. Conectar Remoto" },
+      13: { stage: "ETAPA 5: DESPLIEGUE EN GITHUB", title: "13. git push & verificación" },
+      14: { stage: "ETAPA 6: ENTREGA & SOPORTE", title: "14. Checklist de Entrega" },
+      15: { stage: "ETAPA 6: ENTREGA & SOPORTE", title: "15. Troubleshooting & Errores" }
+    };
+
+    function jumpToModule(modIndex) {
+      if (modIndex < 1) modIndex = 1;
+      if (modIndex > totalModules) modIndex = totalModules;
+
+      // Toggle modules visibility
+      document.querySelectorAll('.module-pane').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      const targetPane = document.getElementById(`module-${modIndex}`);
+      if (targetPane) {
+        targetPane.classList.add('active');
+      }
+
+      currentModule = modIndex;
+
+      // Update Sub-Header text
+      const meta = moduleMeta[modIndex];
+      document.getElementById('moduleStageLabel').innerText = meta.stage;
+      document.getElementById('moduleStepCountLabel').innerText = `Paso ${modIndex < 10 ? '0' + modIndex : modIndex} de ${totalModules}`;
+      document.getElementById('moduleHeadingTitle').innerText = meta.title;
+      document.getElementById('moduleSelectDropdown').value = modIndex;
+
+      // Update Top progress
+      document.getElementById('topProgressBadge').innerText = `Paso ${modIndex < 10 ? '0' + modIndex : modIndex} de ${totalModules}`;
+      const pct = Math.round((modIndex / totalModules) * 100);
+      document.getElementById('topProgressBar').style.width = `${pct}%`;
+      document.getElementById('topCompletedPct').innerText = `${pct}%`;
+
+      // Update Footer text
+      document.getElementById('footerStatusText').innerText = `Módulo ${modIndex} de ${totalModules}: ${meta.title}`;
+      
+      // Update Previous / Next Buttons state
+      const prevBtn = document.getElementById('prevStepBtn');
+      const nextBtn = document.getElementById('nextStepBtn');
+      if (currentModule === 1) {
+        prevBtn.classList.add('opacity-50', 'pointer-events-none');
+      } else {
+        prevBtn.classList.remove('opacity-50', 'pointer-events-none');
+      }
+
+      if (currentModule === totalModules) {
+        nextBtn.innerHTML = '<span>Completar Ruta</span><span class="material-symbols-outlined text-[16px]">verified</span>';
+      } else {
+        nextBtn.innerHTML = '<span>Siguiente Paso</span><span class="material-symbols-outlined text-[16px]">arrow_forward</span>';
+      }
+
+      // Update Complete Button icon
+      updateCompleteButtonVisual();
+
+      // Update Sidebar styling
+      updateSidebarActiveStyles();
+
+      // Scroll content to top
+      const scroller = document.getElementById('moduleScrollContainer');
+      if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function navigateStep(direction) {
+      jumpToModule(currentModule + direction);
+    }
+
+    function toggleCurrentModuleComplete() {
+      if (completedModules.has(currentModule)) {
+        completedModules.delete(currentModule);
+        showToast("Módulo marcado como pendiente");
+      } else {
+        completedModules.add(currentModule);
+        showToast("¡Módulo completado exitosamente!");
+      }
+      updateCompleteButtonVisual();
+      updateSidebarActiveStyles();
+      document.getElementById('sidebarStatsBadge').innerText = `${completedModules.size}/${totalModules} Hechos`;
+    }
+
+    function updateCompleteButtonVisual() {
+      const btnIcon = document.getElementById('toggleCompleteIcon');
+      const btnText = document.getElementById('toggleCompleteText');
+      const isDone = completedModules.has(currentModule);
+
+      if (isDone) {
+        btnIcon.innerText = 'check_box';
+        btnIcon.className = 'material-symbols-outlined text-[18px] text-brand-emerald';
+        btnText.innerText = 'Completado';
+      } else {
+        btnIcon.innerText = 'check_box_outline_blank';
+        btnIcon.className = 'material-symbols-outlined text-[18px] text-slate-500';
+        btnText.innerText = 'Marcar Hecho';
+      }
+    }
+
+    function updateSidebarActiveStyles() {
+      document.querySelectorAll('.sidebar-item').forEach((item, index) => {
+        const itemMod = index + 1;
+        const icon = item.querySelector('.status-icon');
+
+        if (itemMod === currentModule) {
+          item.className = 'sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-semibold bg-brand-orange/15 text-white border-l-2 border-brand-orange transition-all';
+          if (icon) {
+            icon.innerText = completedModules.has(itemMod) ? 'check_circle' : 'radio_button_checked';
+            icon.className = `status-icon material-symbols-outlined text-[16px] ${completedModules.has(itemMod) ? 'text-brand-emerald' : 'text-brand-orange'}`;
+          }
+        } else {
+          item.className = 'sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surface-card transition-all';
+          if (icon) {
+            if (completedModules.has(itemMod)) {
+              icon.innerText = 'check_circle';
+              icon.className = 'status-icon material-symbols-outlined text-[16px] text-brand-emerald';
+            } else {
+              icon.innerText = 'radio_button_unchecked';
+              icon.className = 'status-icon material-symbols-outlined text-[16px] text-slate-600';
+            }
+          }
+        }
+      });
+    }
+
+    // Dynamic Remote updater
+    function updateDynamicRemote() {
+      const user = document.getElementById('githubUsernameInput').value.trim() || 'mi-usuario';
+      document.getElementById('dynUserSpan').innerText = user;
+    }
+
+    // Dynamic Submission Link
+    function updateSubmissionLink() {
+      const user = document.getElementById('submissionUserInput').value.trim() || 'tu-usuario';
+      document.getElementById('submissionDisplay').innerText = `https://github.com/${user}/introduccion_git`;
+    }
+
+    // Checklist calculator
+    function calcChecklist() {
+      const total = document.querySelectorAll('#checklistForm input[type="checkbox"]').length;
+      const checked = document.querySelectorAll('#checklistForm input[type="checkbox"]:checked').length;
+      document.getElementById('chkCountBadge').innerText = `${checked} / ${total}`;
+      if (checked === total) {
+        showToast("¡Felicitaciones! Cumples el 100% de los requisitos");
+      }
+    }
+
+    // Python Simulator
+    function runPythonSim() {
+      const h = parseFloat(document.getElementById('simHours').value) || 0;
+      const r = parseFloat(document.getElementById('simRate').value) || 0;
+      const bruto = h * r;
+      const deduc = bruto * 0.08;
+      const neto = bruto - deduc;
+
+      const out = document.getElementById('simTerminalResult');
+      out.innerHTML = `
+        <div class="text-slate-500">$ python calcularSalario.py</div>
+        <div class="text-slate-300">=== SISTEMA DE CALCULO SALARIAL ===</div>
+        <div class="text-slate-400">Salario Bruto:     $${bruto.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+        <div class="text-slate-400">Deducciones (8%):  $${deduc.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+        <div class="text-brand-emerald font-bold">Total a Pagar:     $${neto.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+      `;
+      showToast("Script ejecutado en entorno virtual");
+    }
+
+    // Module 3 CLI Simulation
+    function simulateCliRun() {
+      const out = document.getElementById('cliOutputSim');
+      out.classList.remove('hidden');
+      showToast("Comando ejecutado con código 0");
+    }
+
+    // Troubleshooting FAQ Accordion
+    function toggleFaq(id) {
+      const el = document.getElementById(id);
+      const icon = document.getElementById(`icon-${id}`);
+      const isHidden = el.classList.contains('hidden');
+
+      // Close other accordions
+      document.querySelectorAll('#troubleAccordionList > div > div[id^="faq-"]').forEach(box => box.classList.add('hidden'));
+      document.querySelectorAll('#troubleAccordionList .material-symbols-outlined[id^="icon-faq-"]').forEach(ic => ic.classList.remove('rotate-180'));
+
+      if (isHidden) {
+        el.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+      }
+    }
+
+    // Copy to clipboard helper
+    function copyCode(text, buttonElement) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Copiado al portapapeles");
+        if (buttonElement) {
+          const original = buttonElement.innerHTML;
+          buttonElement.innerHTML = '<span class="material-symbols-outlined text-[14px] text-brand-emerald">done</span><span class="text-brand-emerald">¡Copiado!</span>';
+          setTimeout(() => {
+            buttonElement.innerHTML = original;
+          }, 1800);
+        }
+      });
+    }
+
+    // Toast alert display
+    function showToast(message) {
+      const toast = document.getElementById('toastAlert');
+      const msg = document.getElementById('toastAlertMessage');
+      msg.innerText = message;
+      toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Initialize state on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+      jumpToModule(1);
+    });
+  </script>
+</body></html>
